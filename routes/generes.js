@@ -1,17 +1,9 @@
 const express = require('express');
 const { Genere, validate } = require('../models/generes');
-
+const auth = require('../middleware/auth')
+const admin = require('../middleware/admin');
 const route = express.Router();
-
-const getGeneres = async () => {
-    const result = await Genere.find().sort('name');
-    return result;
-}
-
-const getGeneresById = async (id) => {
-    const result = await Genere.findById(id);
-    return result;
-}
+const asyncMiddlewareHandler = require('../middleware/async');
 
 const createGeneres = async (genere) => {
     console.log(genere)
@@ -43,17 +35,24 @@ const deleteGeneres = async (id) => {
     }
 }
 
-route.get('/', async (req, res) => {
-    const generes = await getGeneres();
-    res.send(generes)
+// route.get('/', asyncMiddlewareHandler(async (req, res) => {
+//     throw new Error()
+//     const result = await Genere.find().sort('name');
+//     res.send(result);
+// }))
+
+route.get('/',async(req,res)=>{
+    throw new Error("Could not get the genere!")
+    const result = await Genere.find().sort("name");
+    res.send(result);
 })
 
 route.get('/:id', async (req, res) => {
-    const genere = await getGeneresById(req.params.id);
-    res.send(genere);
+    const result = await Genere.findById(id);
+    res.send(result);
 })
 
-route.post('/', async (req, res) => {
+route.post('/', auth, async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
     console.log(req.body);
@@ -70,7 +69,7 @@ route.put('/:id', async (req, res) => {
 
 })
 
-route.delete('/:id', async (req, res) => {
+route.delete('/:id', [auth, admin], async (req, res) => {
 
     const genere = await deleteGeneres(req.params.id);
     res.send(genere);
